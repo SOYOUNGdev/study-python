@@ -1,7 +1,4 @@
-from total_bank import Bank
-from kakao_bank import KaKao
-from kookmin_bank import KookMin
-from shinhan_bank import ShinHan
+from total_bank import *
 
 # 이 파일이 실행하는 파일이다.
 if __name__ == '__main__':
@@ -15,7 +12,8 @@ if __name__ == '__main__':
            "3. 출금\n" \
            "4. 잔액\n" \
            "5. 계좌번호 재설정\n" \
-           "6. 은행 선택 메뉴로 돌아가기\n"
+           "6. 거래내역 확인\n" \
+           "7. 은행 선택 메뉴로 돌아가기\n"
 
     owner_message = "예금주: "
     account_number_message = "계좌번호: "
@@ -47,130 +45,128 @@ if __name__ == '__main__':
             menu_choice = int(input(menu))
 
             # 은행 선택 메뉴로 나가기
-            if menu_choice == 6:
+            if menu_choice == 7:
                 break
+
+
 
             # 개설
             if menu_choice == 1:
                 # 사용자 이름
                 user_name = input(owner_message)
 
-                # 입력받은 계좌번호의 중복검사를 위해 중복 검사 함수를 호출한다.
-                # 이 때, check_account_number()는 static 메소드로 선언되어있기 때문에, 클래스(Bank)로 접근한다.
-                # 매개변수로는 선택한 은행과 입력한 계좌번호를 전달하며
-                # 중복되는 번호가 없다면, 반복문을 빠져나온다.
+
                 while True:
                     user_account = input(account_number_message)
-                    # None은 False값이지만, 가독성과 직관성을 높이기 위해 is 연산자로 검사한다.
-                    if Bank.check_account_number(bank_choice, user_account) is None:
+                    result = Bank.check_account_number(bank_choice, user_account)
+                    try:
+                        CheckNotNone.check_not_none(result)
                         break
+                    except CheckNotNone as e:
+                        print(e)
 
-                # 입력받은 핸드폰 번호의 중복검사를 위해 중복 검사 함수를 호출한다.
-                # 이 때, check_phone()는 static 메소드로 선언되어있기 때문에, 클래스(Bank)로 접근한다.
-                # 매개변수로는 선택한 은행과 입력한 핸드폰 번호를 전달하며
-                # 중복되는 번호가 없다면, 반복문을 빠져나온다.
+
                 while True:
                     user_phone = input(phone_message)
-                    if Bank.check_phone(bank_choice, user_phone) is None:
+                    result = Bank.check_account_number(bank_choice, user_phone)
+                    try:
+                        CheckNotNone.check_not_none(result)
                         break
+                    except CheckNotNone as e:
+                        print(e)
 
-                # 입력받은 비밀번호가 4자리라면 반복문을 빠져나온다.
+
                 while True:
                     user_password = input(password_message)
-                    if len(user_password) == 4:
-                        break
+                    try:
+                        int_user_password = int(user_password)
+                        try:
+                            PasswordLengthCheck.check_length(user_password)
+                            break
+                        except PasswordLengthCheck as e:
+                            print(e)
+                    except ValueError:
+                        print('숫자만 입력해주세요.')
+
 
                 # 사용자가 입력한 예치금
                 user_balance = int(input(money_message))
 
-                # user = Bank 클래스 객체
-                # 계좌가 계설된다.
-                # 어떤 은행에서 개설했는지를 bank_choice에 담아서 전달한다.
-                # open_account()는 회원의 정보를 **kwargs로 받기 때문에 사용자가 입력한 정보를 모두 풀어서 전달해준다.
                 user = Bank.open_account(bank_choice, user_name=user_name, user_account=user_account, user_phone=user_phone, user_password=user_password, user_balance=user_balance)
-
-                # 개설된 계좌 정보 출력
-                print(user)
 
             # 입금
             elif menu_choice == 2:
-                # 사용자가 입력한 계좌번호가 있는지 확인하기 위해
-                # 중복검사 함수인 check_account_number()를 호출한다.
                 user_account = input(account_number_message)
                 user = Bank.check_account_number(bank_choice, user_account)
-                # 결과가 None이 아니라면 해당 계좌를 가진 회원이 있다는 의미이다.
-                # None은 False값이지만, 가독성과 직관성을 높이기 위해 is 연산자로 검사한다.
-                # user는 회원 정보가 dict 타입으로 저장되어있다.
+                deposit_money = 0
+                error_code = None
+
                 if user is not None:
-                    # 따라서, 사용자에게 비밀번호를 입력받아
-                    # 해당 객체의 비밀번호와 같다면
-                    if user.get('user_password') == input(password_message):
-                        # 현재 선택된 은행이 신한은행인지 검사한다.
-                        if isinstance(user.get('object'), ShinHan):
-                            # 신한은행이 아니라면
-                            if bank_choice != 1:
-                                # 입금을 할 수 없다는 것을 알리는 메세지를 출력한다.
-                                print('개설한 은행에서만 입금서비스를 사용하실 수 있습니다.')
-                                # 입금액을 입력받는 코드가 실행되지 못하도록 continue를 사용한다.
-                                continue
-                        # 입금액을 입력받고
+                    try:
+                        result = (user.get('user_password') == input(password_message))
+                        WrongPassword.check_password(result)
                         deposit_money = int(input(deposit_message))
-                        # 해당 객체로 접근하여 입금함수를 호출한다.
-                        # 이 때, user['object']에는 객체(self)가 저장되어있기 때문에 함수를 호출할 수 있다.
-                        user['object'].deposit(deposit_money)
-                        # 에러 메세지 출력을 막기위해 continue 사용
-                        continue
+
+                    except WrongPassword as e:
+                        print(e)
+                        deposit_money = 0
+                        error_code = "비밀번호 오류"
+
+                    finally:
+                        user['object'].deposit(deposit_money, error_code=error_code)
+
                 else:
                     print(error_message)
 
 
             # 출금
             elif menu_choice == 3:
-                # 사용자가 입력한 계좌번호가 있는지 확인하기 위해
-                # 중복검사 함수인 check_account_number()를 호출한다.
                 user_account = input(account_number_message)
                 user = Bank.check_account_number(bank_choice, user_account)
-                # 결과가 None이 아니라면 해당 계좌가 있다는 의미이다.
-                # user는 회원 정보가 dict 타입으로 저장되어있다.
+                withdraw_money = 0
+                error_code = None
+
                 if user is not None:
-                    # 따라서, 사용자에게 비밀번호를 입력받아
-                    # 해당 객체의 비밀번호와 같다면
-                    if user.get('user_password') == input(password_message):
-                        # 출금액을 입력받고
+                    try:
+                        result = (user.get('user_password') == input(password_message))
+                        WrongPassword.check_password(result)
                         withdraw_money = int(input(withdraw_message))
-                        # 해당 객체의 타입이 국민이라면, 출금액 * 1.5 <= 현재 잔고,(출금수수료 = 50%)
-                        # 해당 객체의 타입이 국민이 아니라면, 출금액 <= 현재 잔고 일 경우에만
-                        if withdraw_money * (1.5 if isinstance(user['object'], KookMin) else 1) <= user['money']:
-                            # 해당 객체로 접근하여 출금함수를 호출한다.
-                            user['object'].withdraw(withdraw_money)
-                        else:
-                            print(error_message)
+                        try:
+                            balance = (withdraw_money * (1.5 if isinstance(user['object'], KookMin) else 1) <= user['object'].balance())
+                            InsufficientBalance.check_balance(balance)
+                        except InsufficientBalance as e:
+                            print(e)
+                            error_code = "잔액 부족"
+                            withdraw_money = 0
+
+                        finally:
+                            user['object'].withdraw(-withdraw_money, error_code=error_code)
+
+                    except WrongPassword as e:
+                        print(e)
+                        withdraw_money = 0
+                        error_code = "비밀번호 오류"
+                        user['object'].withdraw(-withdraw_money, error_code=error_code)
+
                 else:
                     print(error_message)
 
 
             # 잔액 조회
             elif menu_choice == 4:
-                # 사용자가 입력한 계좌번호가 있는지 확인하기 위해
-                # 중복검사 함수인 check_account_number()를 호출한다.
                 user_account = input(account_number_message)
                 user = Bank.check_account_number(bank_choice, user_account)
-                # 결과가 None이 아니라면 해당 계좌가 있다는 의미이다.
-                # user는 회원 정보가 dict 타입으로 저장되어있다.
+
                 if user is not None:
-                    # 따라서, 사용자에게 비밀번호를 입력받아
-                    # 해당 객체의 비밀번호와 같다면
+                    print(user)
                     if user.get('user_password') == input(password_message):
-                        # 해당 객체로 접근하여 잔액조회 메소드를 호출한다.
-                        print(f'현재 잔액: {user["object"].balance()}')
-                        # 에러 메세지 출력 막기위해 continue 사용
+                        print(user['object'])
+                        print(f"현재 잔액: {user['object'].balance()}")
                         continue
                 else:
                     print(error_message)
 
             # 계좌 번호 재설정
-            # 핸드폰 번호, 비밀번호 입력 후
-            # 정확하면, 해당 회원의 계좌번호 재설정(다시 입력받기)
             elif menu_choice == 5:
                 user_phone = input(phone_message)
                 user = Bank.check_phone(bank_choice, user_phone)
@@ -181,13 +177,33 @@ if __name__ == '__main__':
                                 new_account = input(new_account_message)
                                 if Bank.check_account_number(bank_choice, new_account) is None:
                                     break
-                            # 새롭게 설정한 계좌번호로 등록한다.
-                            # 계좌를 개설할 때 __dict__로 저장했다.
-                            # 이 때 __dict__를 수정하는 것 보다, 객체로 직접 접근해서 바꾸는 것이 안전하다.
-                            # 결국, __dict__도 self를 받아서 만들어진 객체이므로, 뿌리인 self로 접근하는 것이 좋다.
                             user['object']['user_account'] = new_account
-                            # print(user)
                             break
+                else:
+                    print(error_message)
+
+            # 거래내역 보기
+            # 자신의 계좌번호와 비밀번호 입력 후, 일치하면 확인가능
+            elif menu_choice == 6:
+                user_account = input(account_number_message)
+                user = Bank.check_account_number(bank_choice, user_account)
+                error_code = None
+
+                if user is not None:
+                    try:
+                        result = (user.get('user_password') == input(password_message))
+                        WrongPassword.check_password(result)
+                        with open('log.txt', 'r', encoding='utf-8') as file:
+                            line = None
+                            while line != '':
+                                line = file.readline()
+                                if user['user_account'] in line:
+                                    print(line, end='')
+
+                    except WrongPassword as e:
+                        print(e)
+                        error_code = "비밀번호 오류"
+
                 else:
                     print(error_message)
 

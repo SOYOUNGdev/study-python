@@ -1,6 +1,4 @@
-from kakao_bank import KaKao
-from kookmin_bank import KookMin
-from shinhan_bank import ShinHan
+from log import log_time
 
 # 중복 검사
 # 매개변수에는 선택한 은행번호(choice)와 계좌번호와 휴대폰 번호를 key, value값으로 받아온 값이 있다.
@@ -76,8 +74,14 @@ class Bank:
         user = [ShinHan, KookMin, KaKao][choice - 1](**kwargs)  # ShinHan(**kwags)
         # 입력받은 회원의 정보를 dictionary 타입으로 리스트에 저장한다.
         # check 함수에서 원하는 key로 회원의 정보를 찾기 위함이다.
-        user_info = {'object': user, 'user_name': kwargs['user_name'], 'user_phone': kwargs['user_phone'],
-         'user_password': kwargs['user_password'], 'user_account': kwargs['user_account'], 'user_balance': user_balance}
+        user_info = {
+            'object': user,
+            'user_name': kwargs['user_name'],
+            'user_phone': kwargs['user_phone'],
+            'user_password': kwargs['user_password'],
+            'user_account': kwargs['user_account'],
+            'user_balance': kwargs['user_balance']
+        }
         cls.banks[choice - 1].append(user_info)
         # 개설된 회원 정보를 리턴한다.
         # 선택한 은행 객체로 생성된 사용자가 입력한 정보가 dict 타입으로 담긴 객체
@@ -86,18 +90,21 @@ class Bank:
 
     # 입금
     # 사용자가 입력한 입금액을 매개변수로 받아온다.(money)
-    def deposit(self, money: int):
+    @log_time
+    def deposit(self, money: int, **kwargs):
         # 해당 객체의 잔액에 + 해준다.
         self.user_balance += money
 
+
     # 출금
     # 사용자가 입력한 출금액을 매개변수로 받아온다.(money)
-    def withdraw(self, money: int):
+    @log_time
+    def withdraw(self, money: int, **kwargs):
         # 해당 객체의 잔액에 - 해준다.
-        self.user_balance -= money
+        self.user_balance += money
 
     # 통장 잔고
-    def balance(self):
+    def balance(self, **kwargs):
         # 해당 객체의 잔액을 그대로 리턴해준다.
         return self.user_balance
 
@@ -105,3 +112,78 @@ class Bank:
     # 객체를 출력하는 것만으로도, 원하는 문자열로 출력할 수 있도록 한다.
     def __str__(self):
         return f'{self.user_name}, {self.user_account}, {self.user_phone}, {self.user_password}, {self.user_balance}'
+
+
+# 신한은행
+# 은행을 상속 받는 자식 클래스이다.
+# 입금 시, 수수료 50%
+class ShinHan(Bank):
+    # 입금할 때의 메소드를 재정의한다.(Overriding)
+    # 입금액을 매개변수로 받아와서, 반으로 나누고
+    # 그 금액을 부모클래스의 입금 함수의 매개변수로 전달해준다.
+    def deposit(self, money: int, **kwargs):
+        money //= 2
+        super().deposit(money, **kwargs)
+
+
+# 국민은행
+# 은행을 상속 받는 자식 클래스이다.
+# 출금 시, 수수료 50%
+class KookMin(Bank):
+    # 출금할 때의 메소드를 재정의한다.(Overriding)
+    # 출금액을 매개변수로 받아와서, 1.5배 하고
+    # 그 금액을 부모클래스의 출금 함수의 매개변수로 전달해준다.
+    def withdraw(self, money: int, **kwargs):
+        money *= 1.5
+        super().withdraw(int(money))
+
+
+# 카카오 은행
+# 은행을 상속 받는 자식 클래스이다.
+# 잔액 조회 할때마다, 재산 반토막
+class KaKao(Bank):
+    # 잔액 조회할 때의 메소드를 재정의한다.(Overriding)
+    # 현재 잔액을 반으로 나눈뒤
+    # 부모클래스의 잔액조회 함수를 호출한다.
+    def balance(self, **kwargs):
+        self.user_balance //= 2
+        return super().balance()
+
+
+# 중복일 때, 오류 발생 함수
+class CheckNotNone(Exception):
+    def __str__(self):
+        return "이미 있는 번호입니다. 다시 입력해주세요."
+
+    @staticmethod
+    def check_not_none(chk: bool):
+        if chk:
+            raise CheckNotNone
+
+class PasswordLengthCheck(Exception):
+
+    def __str__(self):
+        return "4자리만 가능합니다."
+
+    @staticmethod
+    def check_length(chk: str):
+        if len(chk) != 4:
+            raise PasswordLengthCheck
+
+class WrongPassword(Exception):
+    def __str__(self):
+        return '비밀번호가 다릅니다. 다시 입력해주세요'
+
+    @staticmethod
+    def check_password(chk: bool):
+        if not chk:
+            raise WrongPassword
+
+class InsufficientBalance(Exception):
+    def __str__(self):
+        return '잔액이 부족합니다.'
+
+    @staticmethod
+    def check_balance(chk: bool):
+        if not chk:
+            raise InsufficientBalance

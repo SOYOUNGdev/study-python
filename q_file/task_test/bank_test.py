@@ -27,11 +27,8 @@ if __name__ == '__main__':
 
 
     while True:
-        # 은행 메뉴
-        # bank_choice = 사용자가 선택한 은행
         bank_choice = int(input(bank_menu))
 
-        # 메뉴의 번호 이외의 번호를 입력 시 밑으로 내려가지 않게 하기 위함
         if bank_choice < 1 or bank_choice > len(Bank.banks):
             continue
 
@@ -40,19 +37,13 @@ if __name__ == '__main__':
             break
 
         while True:
-            # 서비스 메뉴
-            # menu_choice = 사용자가 선택한 서비스
             menu_choice = int(input(menu))
 
-            # 은행 선택 메뉴로 나가기
             if menu_choice == 7:
                 break
 
 
-
-            # 개설
             if menu_choice == 1:
-                # 사용자 이름
                 user_name = input(owner_message)
 
 
@@ -89,7 +80,6 @@ if __name__ == '__main__':
                         print('숫자만 입력해주세요.')
 
 
-                # 사용자가 입력한 예치금
                 user_balance = int(input(money_message))
 
                 user = Bank.open_account(bank_choice, user_name=user_name, user_account=user_account, user_phone=user_phone, user_password=user_password, user_balance=user_balance)
@@ -140,13 +130,13 @@ if __name__ == '__main__':
                             withdraw_money = 0
 
                         finally:
-                            user['object'].withdraw(-withdraw_money, error_code=error_code)
+                            user['object'].withdraw(withdraw_money, error_code=error_code)
 
                     except WrongPassword as e:
                         print(e)
                         withdraw_money = 0
                         error_code = "비밀번호 오류"
-                        user['object'].withdraw(-withdraw_money, error_code=error_code)
+                        user['object'].withdraw(withdraw_money, error_code=error_code)
 
                 else:
                     print(error_message)

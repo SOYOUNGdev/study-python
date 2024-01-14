@@ -101,7 +101,7 @@ class Bank:
     @log_time
     def withdraw(self, money: int, **kwargs):
         # 해당 객체의 잔액에 - 해준다.
-        self.user_balance += money
+        self.user_balance -= money
 
     # 통장 잔고
     def balance(self, **kwargs):
